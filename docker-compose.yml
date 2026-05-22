@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: innovatech-frontend
+    ports:
+      - "80:80" # Expone el puerto 80 para que el profe entre por la IP pública de AWS
+    networks:
+      - innovatech-net
+
+networks:
+  innovatech-net:
+    driver: bridge
