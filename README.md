@@ -1,20 +1,42 @@
-# 💻 Innovatech - Plataforma de Despachos (Frontend)
+# Innovatech - Fase 3: Escalabilidad y Orquestación Cloud 🚀
 
-Este repositorio contiene la interfaz gráfica de usuario para el sistema de despachos de **Innovatech**, optimizada para producción y desplegada de forma automatizada en la nube.
+Este repositorio contiene el código fuente y la configuración del pipeline de Integración y Despliegue Continuo (CI/CD) para el microservicio de **Frontend** del proyecto Innovatech. La infraestructura está diseñada para operar de manera elástica, segura y con alta disponibilidad.
 
-## 🛠️ Tecnologías Utilizadas
-* **Frontend:** JavaScript / Node.js
-* **Servidor Web de Producción:** Nginx (Alpine)
-* **Contenedorización:** Docker & Docker Compose
-* **CI/CD:** GitHub Actions
-* **Cloud Infrastructure:** AWS EC2
+## 🏗️ Arquitectura de la Solución
 
-## ⚡ Optimización y Despliegue (Rúbrica)
-* **Estrategia Multi-stage:** Se utiliza Node.js exclusivamente para compilar los recursos estáticos del sitio y luego se transfieren a una imagen limpia de **Nginx**, logrando un contenedor ultra ligero y veloz.
-* **Orquestación Local:** Configurado con `docker-compose.yml` para levantar el servidor web en el puerto `80`.
+La solución implementa una arquitectura serverless y automatizada utilizando los siguientes servicios de AWS:
 
-## 🚀 Pipeline de Automatización
-Al realizar un `push` a la rama `deploy`:
-1. GitHub Actions construye la imagen con la última versión del código.
-2. Sube la imagen a **Docker Hub**.
-3. Ejecuta un script remoto vía **SSH** en **AWS EC2** para actualizar el contenedor de cara al cliente final.
+* **AWS ECS (Elastic Container Service) con AWS Fargate:** Orquestación de contenedores sin gestión de servidores físicos.
+* **Amazon ECR (Elastic Container Registry):** Almacenamiento y versionamiento privado de las imágenes Docker.
+* **Application Load Balancer (ALB):** Distribución inteligente del tráfico externo hacia los contenedores activos.
+* **AWS CloudWatch:** Centralización de métricas críticas y logs de auditoría del sistema.
+
+---
+
+## 🤖 Pipeline CI/CD (GitHub Actions)
+
+El archivo de flujo de trabajo `.github/workflows/deploy.yml` automatiza el ciclo de vida del software cada vez que se realiza un `git push` a la rama principal. El pipeline ejecuta las siguientes etapas:
+
+1.  **Aprovisionamiento de Credenciales:** Autenticación segura mediante secretos de GitHub utilizando el `LabRole` temporal de AWS Academy.
+2.  **Build & Tag:** Compilación de la imagen Docker optimizada utilizando el Commit SHA como etiqueta única de trazabilidad.
+3.  **Push a ECR:** Carga de la imagen construida hacia el registro privado en Amazon ECR.
+4.  **Deploy en ECS:** Actualización del servicio en el clúster `default` aplicando una estrategia de despliegue progresivo (*Rolling Update*) con **cero tiempo de inactividad (Cero Downtime)**.
+
+---
+
+## 🔒 Variables de Entorno y Configuración del Entorno
+
+Para la replicación y auditoría del despliegue, el pipeline utiliza las siguientes variables clave mapeadas en la infraestructura:
+
+* **AWS_REGION:** `us-east-1`
+* **ECS_CLUSTER:** `default`
+* **ECS_SERVICE:** `innovatech-cluster-f190`
+* **ECS_TASK_DEFINITION:** `innovatech-frontend-task`
+* **CONTAINER_NAME:** `frontend-container`
+
+---
+
+## 📈 Resiliencia y Alta Disponibilidad
+
+* **Service Auto Scaling:** Implementación de políticas de *Target Tracking* basadas en el consumo promedio de CPU al **50%**.
+* **Health Checks Activos:** El balanceador valida el estado de salud del contenedor antes de redirigir el tráfico de producción, garantizando que los usuarios nunca experimenten caídas del servicio durante una actualización.
